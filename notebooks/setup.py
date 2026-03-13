@@ -8,6 +8,7 @@ verilog_path = circuits_path/"verilog"
 aig_path = circuits_path/"aig"
 blif_path = circuits_path/"blif"
 cnf_path = circuits_path/"cnf"
+aag_path = circuits_path/"aag"
 
 def setup_tools():
     # Project root (directory containing this script)

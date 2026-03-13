@@ -7,7 +7,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # export VIRTUAL_ENV_DISABLE_PROMPT=0
 
 # Activate Python virtual environment
-source "$PROJECT_ROOT/venv/bin/activate"
+source "$PROJECT_ROOT/.venv/bin/activate"
 
 # Add tools to PATH
 export PATH="$PROJECT_ROOT/.tools/cadical/build:$PATH"
