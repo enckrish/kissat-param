@@ -1,4 +1,5 @@
-`define BIT_WIDTH 9
+// Defining a template for multipliers with a parameterized bit width.
+`define BIT_WIDTH {{BIT_WIDTH}}
   
 // BIT_WIDTH=8 takes ~10 sec for CEC  
 // BIT_WIDTH=9 takes ~43 sec for CEC  
