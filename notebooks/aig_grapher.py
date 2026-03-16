@@ -1,4 +1,5 @@
 from enum import Enum
+from pathlib import Path
 from typing import Callable, List, Tuple, Dict, TypeVar
 
 # NOTE: All the inputs in the AIGs we are using are laid out LSB to MSB in the AAG file
@@ -58,7 +59,7 @@ _T_AIG_SimV = TypeVar("_T_AIG_SimV")
 
 
 class AIG:
-    def __init__(self, aiger_file: str):
+    def __init__(self, aiger_file: str | Path):
         self.nodes: Dict[int, AIGNode] = {}
         self.input_ids: List[int] = []
         self.outputs: List[Tuple[int, bool]] = []
@@ -67,17 +68,19 @@ class AIG:
             {0: AIGNode(node_id=0, typ=AIGNodeType.F, fanouts=[])}
         )
 
-        if aiger_file.split(".")[-1] == "aig":
+        aiger_file = Path(aiger_file)
+        
+        if aiger_file.suffix == ".aig":
             self.handle_aig(aiger_file)
-        elif aiger_file.split(".")[-1] == "aag":
+        elif aiger_file.suffix == ".aag":
             self.handle_aag(aiger_file)
         else:
             raise ValueError(f"Unsupported file format: {aiger_file}")
 
-    def handle_aig(self, aiger_file: str) -> None:
+    def handle_aig(self, aiger_file: str|Path) -> None:
         raise NotImplementedError("AIG parsing not implemented yet")
 
-    def handle_aag(self, aiger_file: str) -> None:
+    def handle_aag(self, aiger_file: str|Path) -> None:
         # Open file and read lines
         lines: List[str] = []
         with open(aiger_file, "r") as f:
@@ -147,7 +150,7 @@ class AIG:
         self,
         node_values: Dict[int, _T_AIG_SimV],
         inv_fn: Callable[[_T_AIG_SimV], _T_AIG_SimV],
-        agg_fn: Callable[[Tuple[_T_AIG_SimV, _T_AIG_SimV]], _T_AIG_SimV],
+        and_fn: Callable[[Tuple[_T_AIG_SimV, _T_AIG_SimV]], _T_AIG_SimV],
     ) -> Tuple[Dict[int, _T_AIG_SimV], List[_T_AIG_SimV]]:
         assert 0 in self.nodes, (
             "Node 0 (constant false) must be present in the `node_values` dictionary."
@@ -173,7 +176,7 @@ class AIG:
                         val = inv_fn(val)
                     fanin_values.append(val)
                 assert len(fanin_values) == 2, f"Expected 2 fanin values for node {node_id} but got {len(fanin_values)}"
-                values[node_id] = agg_fn((fanin_values[0], fanin_values[1]))
+                values[node_id] = and_fn((fanin_values[0], fanin_values[1]))
                 return values[node_id]
             else:
                 raise ValueError(f"Unsupported node type for simulation: {node.typ}")
@@ -195,7 +198,7 @@ class AIG:
         node_values, output_values = self.generalized_sim(
             node_values=node_values,
             inv_fn=lambda x: not x,
-            agg_fn=lambda x: x[0] and x[1],
+            and_fn=lambda x: x[0] and x[1],
         )
         return node_values, output_values
 
