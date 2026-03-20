@@ -1,6 +1,7 @@
 from enum import Enum
 from pathlib import Path
 from typing import Callable, List, Tuple, Dict, TypeVar
+import random
 
 # NOTE: All the inputs in the AIGs we are using are laid out LSB to MSB in the AAG file
 
@@ -192,15 +193,25 @@ class AIG:
         return node_values, output_values
 
     def simulate(
-        self, node_values: Dict[int, bool]
-    ) -> Tuple[Dict[int, bool], List[bool]]:
-        node_values.update({0: False})  # Constants
-        node_values, output_values = self.generalized_sim(
-            node_values=node_values,
-            inv_fn=lambda x: not x,
-            and_fn=lambda x: x[0] and x[1],
+        self, simulation_bits: int,
+    ) -> Tuple[Dict[int, int], List[int]]:
+        """
+        Runs a simulation on each node.
+        Args:
+            simulation_bits: the number of bits to simulate for each input
+        Out:
+            (node_vals, out_vals):
+                node_vals: maps node id to a `simulation_width` bit integer, holding the calculated value of the node during the simulation.
+                out_vals: contains the ordered list of outputs.
+        """
+        node_vals = {i: random.getrandbits(simulation_bits) for i in self.input_ids}
+        node_vals.update({0: 0})
+        node_vals, out_vals = self.generalized_sim(
+            node_vals,
+            lambda x: x ^ ((1 << simulation_bits) - 1),
+            lambda xy: xy[0] & xy[1],
         )
-        return node_values, output_values
+        return node_vals, out_vals
 
 
 if __name__ == "__main__":
@@ -228,9 +239,8 @@ if __name__ == "__main__":
     print("\nSimulating AIG with random input values...")
     import random
 
-    input_values = {node_id: random.choice([True, False]) for node_id in aig.input_ids}
     # print(f"Input values: {input_values}")
-    node_values, output_values = aig.simulate(input_values)
+    node_values, output_values = aig.simulate(16)
 
     # print all node values
     # print(f"All node values: {node_values}")

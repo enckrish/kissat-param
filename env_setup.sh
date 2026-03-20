@@ -11,5 +11,6 @@ source "$PROJECT_ROOT/.venv/bin/activate"
 
 # Add tools to PATH
 export PATH="$PROJECT_ROOT/.tools/cadical/build:$PATH"
+export PATH="$PROJECT_ROOT/.tools/aiger/:$PATH"
 export PATH="$PROJECT_ROOT/.tools/abc:$PATH"
 export PATH="$PROJECT_ROOT/.tools/oss-cad-suite/bin:$PATH"

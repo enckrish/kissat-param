@@ -1,3 +1,5 @@
 .tools
 .venv
 .ephermal
+*abc.history
+*/__pycache__/*
