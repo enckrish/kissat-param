@@ -19,6 +19,7 @@ def setup_tools():
         PROJECT_ROOT / ".tools/cadical/build",
         PROJECT_ROOT / ".tools/abc",
         PROJECT_ROOT / ".tools/oss-cad-suite/bin",
+        PROJECT_ROOT / ".tools/aiger"
     ]
 
     # Update PATH (prepend like the shell script)

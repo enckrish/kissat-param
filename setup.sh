@@ -15,7 +15,7 @@ cd cadical && ./configure && make -j$(nproc)
 cd ..
 
 git clone https://github.com/arminbiere/aiger
-cd aiger && ./configure && make -j$(nproc)
+cd aiger && ./configure.sh && make -j$(nproc)
 
 wget https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-03-11/oss-cad-suite-linux-x64-20260311.tgz
 tar -xzf oss-cad-suite-linux-x64-20260311.tgz
