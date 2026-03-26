@@ -21,4 +21,7 @@ wget https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-03-11
 tar -xzf oss-cad-suite-linux-x64-20260311.tgz
 rm oss-cad-suite-linux-x64-20260311.tgz
 
+git clone https://github.com/arminbiere/cadiback
+cd cadiback && ./configure && make
+
 sh env_setup.sh

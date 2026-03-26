@@ -213,6 +213,101 @@ class AIG:
         )
         return node_vals, out_vals
 
+    def to_cnf(self) -> Tuple[int, List[List[int]], Dict[int, Dict[str,int | AIGNodeType]]]:
+        """
+        Convert the AIG to CNF using Tseitin encoding.
+        
+        Tseitin encoding introduces auxiliary variables for each internal node and generates
+        clauses to represent the AND gates and inversions.
+        
+        Returns:
+            Tuple[int, List[List[int]], Dict[int, Dict[str, Dict[str, int | AIGNodeType]]]]: 
+                - Number of variables in the CNF formula
+                - List of clauses, where each clause is a list of literals (int).
+                  Positive integers represent positive literals, negative represent negated literals.
+                  Variable IDs start from 1. Node IDs are used as variable IDs.
+                - Mapping from CNF variable IDs to AIG node information.
+                  Maps var_id -> {'node_id': int, 'type': AIGNodeType}
+        
+        Example:
+            For an AND gate with inputs a, b and output c:
+            The encoding generates three clauses to enforce c iff (a AND b):
+            - (~a | ~b | c)   : if both a and b are true, then c must be true
+            - (a | ~c)        : if c is true, then a must be true
+            - (b | ~c)        : if c is true, then b must be true
+        """
+        clauses: List[List[int]] = []
+        var_to_node: Dict[int, Dict[str, int | AIGNodeType]] = {}
+        
+        # Process all intermediate nodes (AND gates)
+        for node_id, node in self.nodes.items():
+            if node.typ != AIGNodeType.INT or node_id == 0:
+                continue
+            
+            # Get fanin information
+            (fanin1_id, fanin1_inv), (fanin2_id, fanin2_inv) = node.fanins
+            
+            # Create literals for the fanins (negative if inverted)
+            lit1 = -fanin1_id if fanin1_inv else fanin1_id
+            lit2 = -fanin2_id if fanin2_inv else fanin2_id
+            lit_out = node_id  # Output literal for this AND gate
+            
+            # Record the mapping for this variable
+            var_to_node[node_id] = {'node_id': node_id, 'type': node.typ}
+            
+            # Tseitin encoding for AND gate: output iff (input1 AND input2)
+            # This is enforced by three clauses:
+            # 1. (~fanin1_inv(fanin1_id) | ~fanin2_inv(fanin2_id) | output)
+            #    If both inputs are true, output must be true
+            clauses.append([-lit1, -lit2, lit_out])
+            
+            # 2. (fanin1_inv(fanin1_id) | ~output)
+            #    If output is true, first input must be true
+            clauses.append([lit1, -lit_out])
+            
+            # 3. (fanin2_inv(fanin2_id) | ~output)
+            #    If output is true, second input must be true
+            clauses.append([lit2, -lit_out])
+        
+        # Add constraints for primary outputs
+        # Each primary output must equal its corresponding internal node (with polarity)
+        for output_node_id, output_inv in self.outputs:
+            lit_output = -output_node_id if output_inv else output_node_id
+            # The output literal must be true in the final formula
+            clauses.append([lit_output])
+        
+        # Add mappings for all primary inputs
+        for input_id in self.input_ids:
+            var_to_node[input_id] = {'node_id': input_id, 'type': AIGNodeType.PI}
+        
+        # Add mapping for constant false node
+        var_to_node[0] = {'node_id': 0, 'type': AIGNodeType.F}
+        
+        # Determine the number of variables (highest node ID used as variable ID)
+        num_vars = max(self.nodes.keys()) if self.nodes else 0
+        
+        return num_vars, clauses, var_to_node
+
+    def write_cnf_to_file(self, output_file: str | Path) -> None:
+        """
+        Convert the AIG to CNF using Tseitin encoding and write it to a DIMACS CNF file.
+        
+        Args:
+            output_file (str | Path): Path to write the DIMACS CNF file to.
+        """
+        num_vars, clauses, _var_to_node = self.to_cnf()
+        num_clauses = len(clauses)
+        
+        with open(output_file, "w") as f:
+            # Write header
+            f.write("c DIMACS CNF format\n")
+            f.write("c Converted from AIG using Tseitin encoding\n")
+            f.write(f"p cnf {num_vars} {num_clauses}\n")
+            
+            # Write clauses
+            for clause in clauses:
+                f.write(" ".join(map(str, clause)) + " 0\n")
+
 
 if __name__ == "__main__":
     import argparse
