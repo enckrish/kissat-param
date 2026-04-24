@@ -252,6 +252,37 @@ class AIG:
         )
         return node_vals, out_vals
 
+    def to_graph_data(self):
+        # only made for single output aigs for now 
+        # what we want
+        # node_typ: INP, OUT, INT
+        # num_inverted_preds
+        # edges
+        # edge_types
+        # out_is_inv
+        assert len(self.outputs) == 1
+
+        def _get_num_inv_preds(node: AIGNode):
+            n = 0
+            for _, inv in node.fanins:
+                n += 1 if inv else 0
+            return n
+        
+        # Adding entries for node 0 (FALSE) seperately
+        node_typ = [3] + [int(node.typ.value) for node in self.nodes.values()]
+        num_inv_preds = [0] + [_get_num_inv_preds(node) for node in self.nodes.values()]
+        edge_out = []
+        edge_in = []
+        edge_typ = []
+        for nid, node in self.nodes.items():
+            for node_in, inv in node.fanouts:
+                edge_out.append(nid)
+                edge_in.append(node_in)
+                edge_typ.append(inv)
+        edges = [edge_out, edge_in]
+        out_is_inv = self.outputs[0][1]
+        return edges, edge_typ, node_typ, num_inv_preds, out_is_inv
+
     def to_cnf(self) -> Tuple[int, List[List[int]], Dict[int, Dict[str,int | AIGNodeType]]]:
         """
         Convert the AIG to CNF using Tseitin encoding.
