@@ -11,7 +11,7 @@ def ensure_output_dir(path: str | Path):
 		os.makedirs(output_dir)
 
 
-def verilog_to_aig(verilog_file: str | Path, top_module: str, output_aig: str | Path="output.aig"):
+def verilog_to_aig(verilog_file: str | Path, top_module: str, output_aig: str | Path="output.aig", flatten: bool = False):
 	"""
 	Compile a specific Verilog module to AIG using Yosys.
 
@@ -22,10 +22,12 @@ def verilog_to_aig(verilog_file: str | Path, top_module: str, output_aig: str | 
 	"""
 		
 	ensure_output_dir(output_aig)
-		
+	
+	flatten_script = f"synth -flatten -top {top_module}" if flatten else ""
 	yosys_script = f"""
 	read_verilog {verilog_file}
 	hierarchy -check -top {top_module}
+	{flatten_script}
 	proc
 	opt
 	techmap
