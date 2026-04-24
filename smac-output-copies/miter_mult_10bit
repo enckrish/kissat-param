@@ -1,0 +1,59 @@
+Regular time: 59.1
+[INFO][abstract_initial_design.py:91] Reducing the number of initial configurations from 30 to 10 (max_ratio == 0.25).
+[WARNING][target_function_runner.py:74] The argument dimacs is not set by SMAC: Consider removing it from the target function.
+[INFO][abstract_initial_design.py:143] Using 10 initial design configurations and 0 additional configurations.
+[INFO][abstract_intensifier.py:313] Using only one seed for deterministic scenario.
+113.06 --decay=50 --eliminateeffort=1200 --stable=0
+[INFO][abstract_intensifier.py:523] Added config 689333 as new incumbent because there are no incumbents yet.
+48.03 --decay=110 --eliminateeffort=600 --stable=2
+[INFO][abstract_intensifier.py:630] Added config 5fde98 and rejected config 689333 as incumbent because it is not better than the incumbents on 1 instances: 
+73.36 --decay=160 --eliminateeffort=1900 --stable=1
+50.95 --decay=1 --eliminateeffort=300 --stable=1
+51.84 --decay=30 --eliminateeffort=1700 --stable=2
+112.4 --decay=200 --eliminateeffort=100 --stable=0
+48.65 --decay=150 --eliminateeffort=1400 --stable=2
+65.21 --decay=90 --eliminateeffort=800 --stable=1
+45.62 --decay=80 --eliminateeffort=1800 --stable=2
+[INFO][abstract_intensifier.py:630] Added config e2c97e and rejected config 5fde98 as incumbent because it is not better than the incumbents on 1 instances: 
+63.67 --decay=130 --eliminateeffort=400 --stable=1
+50.86 --decay=130 --eliminateeffort=1800 --stable=2
+55.06 --decay=120 --eliminateeffort=1900 --stable=2
+49.94 --decay=110 --eliminateeffort=1900 --stable=2
+45.8 --decay=80 --eliminateeffort=1900 --stable=2
+54.76 --decay=120 --eliminateeffort=1800 --stable=2
+53.07 --decay=70 --eliminateeffort=1800 --stable=2
+45.07 --decay=20 --eliminateeffort=100 --stable=2
+[INFO][abstract_intensifier.py:630] Added config da2c0e and rejected config e2c97e as incumbent because it is not better than the incumbents on 1 instances: 
+111.83 --decay=200 --eliminateeffort=1700 --stable=0
+54.46 --decay=140 --eliminateeffort=1500 --stable=2
+45.3 --decay=80 --eliminateeffort=200 --stable=2
+84.33 --decay=80 --eliminateeffort=0 --stable=2
+45.4 --decay=80 --eliminateeffort=100 --stable=2
+37.81 --decay=1 --eliminateeffort=100 --stable=2
+[INFO][abstract_intensifier.py:630] Added config 62fd96 and rejected config da2c0e as incumbent because it is not better than the incumbents on 1 instances: 
+67.28 --decay=30 --eliminateeffort=800 --stable=1
+[WARNING][config_selector.py:249] Did not find enough configurations from the acquisition function. Sampling random configurations.
+65.86 --decay=200 --eliminateeffort=400 --stable=1
+109.91 --decay=200 --eliminateeffort=300 --stable=0
+37.39 --decay=1 --eliminateeffort=200 --stable=2
+[INFO][abstract_intensifier.py:630] Added config 7c336a and rejected config 62fd96 as incumbent because it is not better than the incumbents on 1 instances: 
+119.76 --decay=140 --eliminateeffort=0 --stable=1
+54.43 --decay=10 --eliminateeffort=200 --stable=2
+71.75 --decay=160 --eliminateeffort=1600 --stable=1
+[WARNING][config_selector.py:249] Did not find enough configurations from the acquisition function. Sampling random configurations.
+109.94 --decay=190 --eliminateeffort=500 --stable=0
+110.51 --decay=180 --eliminateeffort=1700 --stable=0
+42.38 --decay=40 --eliminateeffort=600 --stable=2
+64.62 --decay=180 --eliminateeffort=500 --stable=1
+46.79 --decay=180 --eliminateeffort=1000 --stable=2
+37.73 --decay=1 --eliminateeffort=500 --stable=2
+37.35 --decay=1 --eliminateeffort=800 --stable=2
+[INFO][abstract_intensifier.py:630] Added config 4f41e0 and rejected config 7c336a as incumbent because it is not better than the incumbents on 1 instances: 
+37.36 --decay=1 --eliminateeffort=600 --stable=2
+111.07 --decay=30 --eliminateeffort=1600 --stable=0
+37.22 --decay=1 --eliminateeffort=1000 --stable=2
+[INFO][abstract_intensifier.py:630] Added config 7d90c5 and rejected config 4f41e0 as incumbent because it is not better than the incumbents on 1 instances: 
+[INFO][smbo.py:342] Configuration budget is exhausted:
+[INFO][smbo.py:343] --- Remaining wallclock time: inf
+[INFO][smbo.py:344] --- Remaining cpu time: inf
+[INFO][smbo.py:345] --- Remaining trials: 0

@@ -14,13 +14,18 @@ def setup_tools():
     # Project root (directory containing this script)
     print(f"Setting project root: {PROJECT_ROOT}")
 
+    # relative paths in .tools
+    tools_at = [
+        "cadical/build",
+        "abc",
+        "oss-cad-suite/bin",
+        "aiger",
+        "cadiback/",
+        "kissat/build"
+    ]
     # Tool paths
     tool_paths = [
-        PROJECT_ROOT / ".tools/cadical/build",
-        PROJECT_ROOT / ".tools/abc",
-        PROJECT_ROOT / ".tools/oss-cad-suite/bin",
-        PROJECT_ROOT / ".tools/aiger",
-        PROJECT_ROOT / ".tools/cadiback/",
+        PROJECT_ROOT / f".tools/{p}" for p in tools_at
     ]
 
     # Update PATH (prepend like the shell script)

@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any, Dict
 
 from utils import run_command
 import os
@@ -190,7 +191,13 @@ def aig_miter(aig1: str | Path, aig2: str | Path, output_aig: str | Path="miter.
 		raise RuntimeError(f"ABC miter generation failed with exit code {out.returncode} and output:\n{out.output}")
 	return out
 
-def cadical_check(dimacs_file: str | Path):
+SAT_err_c_map = {
+	20: "UNSATISFIABLE",
+	10: "SATISFIABLE",
+	0: "INDETERMINATE"
+}
+
+def cadical_check(dimacs_file: str | Path, **kwargs):
 	"""
 	Check satisfiability of a DIMACS CNF file using CaDiCaL.
 
@@ -200,14 +207,24 @@ def cadical_check(dimacs_file: str | Path):
 	Returns:
 		(status, output): Tuple containing the SAT status ("SATISFIABLE", "UNSATISFIABLE", "INDETERMINATE") and the raw output from CaDiCaL
 	"""
-	err_c_map = {
-		20: "UNSATISFIABLE",
-		10: "SATISFIABLE",
-		0: "INDETERMINATE"
-	}
 
 	command = f'cadical {dimacs_file}'
-	out = run_command(command)
+	out = run_command(command, **kwargs)
 	
-	return (err_c_map.get(out.returncode, "UNKNOWN"), out)
+	return (SAT_err_c_map.get(out.returncode, "UNKNOWN"), out)
 
+def kissat_check(dimacs_file: str | Path, params: Dict[str, Any] | None=None, timeout=None):
+	params_list = " ".join([f"--{k}={v}" for k, v in params.items()]) if params else ""
+	timeout_p = f"--time={timeout}" if timeout else ""
+	command = f'kissat {dimacs_file} ' + params_list + " " + timeout_p
+	out = run_command(command)
+
+	ret_status = SAT_err_c_map.get(out.returncode, "UNKNOWN")
+
+	runtime = None
+	for line in out.output.splitlines():
+		if "process-time:" in line:
+			# Split by colon, take the second part, remove 'seconds', and strip whitespace
+			runtime = float(line.split()[-2])
+
+	return (runtime, ret_status, out)

@@ -3,3 +3,8 @@ pydantic-ai
 torch
 torchvision
 colorama
+torch_geometric
+tqdm
+ipywidgets
+smac
+ConfigSpace

@@ -1,5 +1,6 @@
 from enum import Enum
 from pathlib import Path
+from time import time, time_ns
 from typing import Callable, List, Tuple, Dict, TypeVar
 import random
 
@@ -34,7 +35,7 @@ class AIGNode:
         node_id: int,
         typ: AIGNodeType,
         fanouts: List[Tuple[int, bool]],
-        fanins: Tuple[Tuple[int, bool], Tuple[int, bool]] = ((-1, False), (-1, False)),
+        fanins: List[Tuple[int, bool]] = [(-1, False), (-1, False)], # using list for easier mutability
     ):
         """
         Args:
@@ -46,13 +47,13 @@ class AIGNode:
         self.node_id = node_id
         self.typ = typ
         self.fanouts = fanouts
-        self.fanins = fanins
+        self.fanins: List[Tuple[int, bool]] = fanins
 
     def add_fanin(self, fanin_id: int, is_inverted: bool) -> None:
         if self.fanins[0][0] == -1:
-            self.fanins = ((fanin_id, is_inverted), self.fanins[1])
+            self.fanins = [(fanin_id, is_inverted), self.fanins[1]]
         elif self.fanins[1][0] == -1:
-            self.fanins = (self.fanins[0], (fanin_id, is_inverted))
+            self.fanins = [self.fanins[0], (fanin_id, is_inverted)]
         else:
             raise ValueError(f"Node {self.node_id} already has 2 fanins, cannot add more")
         
@@ -61,6 +62,9 @@ _T_AIG_SimV = TypeVar("_T_AIG_SimV")
 
 class AIG:
     def __init__(self, aiger_file: str | Path):
+        self._init_from_file(aiger_file)
+
+    def _init_from_file(self, aiger_file: str | Path) -> None:
         self.nodes: Dict[int, AIGNode] = {}
         self.input_ids: List[int] = []
         self.outputs: List[Tuple[int, bool]] = []
@@ -78,8 +82,39 @@ class AIG:
         else:
             raise ValueError(f"Unsupported file format: {aiger_file}")
 
-    def handle_aig(self, aiger_file: str|Path) -> None:
-        raise NotImplementedError("AIG parsing not implemented yet")
+    # todo: untested
+    def serialize(self) -> str:
+        """
+        Serialize the AIG back to AAG format.
+        Note: This is a simple implementation and may not preserve the original structure or ordering of the AAG file.
+        """
+        lines = []
+        M = max(self.nodes.keys()) * 2  # Maximum literal ID (node_id * 2)
+        I = len(self.input_ids)
+        L = 0  # Latches are not supported in this implementation
+        O = len(self.outputs)
+        A = len([node for node in self.nodes.values() if node.typ == AIGNodeType.INT])
+        
+        lines.append(f"aag {M} {I} {L} {O} {A}\n")
+        
+        # Add input literals
+        for input_id in self.input_ids:
+            lines.append(f"{input_id * 2}\n")
+        
+        # Add output literals
+        for output_id, is_inverted in self.outputs:
+            lit = output_id * 2 + (1 if is_inverted else 0)
+            lines.append(f"{lit}\n")
+        
+        # Add AND gate definitions
+        for node in self.nodes.values():
+            if node.typ == AIGNodeType.INT:
+                fanin1_id, fanin1_inv = node.fanins[0]
+                fanin2_id, fanin2_inv = node.fanins[1]
+                line = f"{node.node_id * 2} {fanin1_id * 2 + (1 if fanin1_inv else 0)} {fanin2_id * 2 + (1 if fanin2_inv else 0)}\n"
+                lines.append(line)
+        
+        return "".join(lines)
 
     def handle_aag(self, aiger_file: str|Path) -> None:
         # Open file and read lines
@@ -136,7 +171,7 @@ class AIG:
                 node_id=node_id,
                 typ=AIGNodeType.INT,
                 fanouts=[],
-                fanins=((fanin1_id, fanin1_inverted), (fanin2_id, fanin2_inverted)),
+                fanins=[(fanin1_id, fanin1_inverted), (fanin2_id, fanin2_inverted)],
             )
 
         len_nodes = len(self.nodes)
@@ -194,6 +229,7 @@ class AIG:
 
     def simulate(
         self, simulation_bits: int,
+        seed: int | None = None
     ) -> Tuple[Dict[int, int], List[int]]:
         """
         Runs a simulation on each node.
@@ -204,6 +240,9 @@ class AIG:
                 node_vals: maps node id to a `simulation_width` bit integer, holding the calculated value of the node during the simulation.
                 out_vals: contains the ordered list of outputs.
         """
+        if not seed:
+            seed = time_ns()
+        random.seed(seed)
         node_vals = {i: random.getrandbits(simulation_bits) for i in self.input_ids}
         node_vals.update({0: 0})
         node_vals, out_vals = self.generalized_sim(
@@ -308,6 +347,74 @@ class AIG:
             for clause in clauses:
                 f.write(" ".join(map(str, clause)) + " 0\n")
 
+    def bfs_levels(self) -> List[List[int]]:
+        """
+        Perform a breadth-first search (BFS) to determine the levels of nodes in the AIG.
+        
+        Returns:
+            List[List[int]]: A list of levels, where each level is a list of node IDs at that level.
+                             Level 0 contains primary inputs and the constant false node, level 1 contains nodes directly driven by level 0, and so on.
+        """
+        levels: List[List[int]] = []
+        visited: set = set()
+        queue: List[Tuple[int, int]] = []  # (node_id, level)
+        
+        # Start BFS with primary inputs and constant false node
+        for input_id in self.input_ids:
+            queue.append((input_id, 0))
+            visited.add(input_id)
+        if 0 in self.nodes:
+            queue.append((0, 0))
+            visited.add(0)
+        
+        while queue:
+            node_id, level = queue.pop(0)
+            if len(levels) <= level:
+                levels.append([])
+            levels[level].append(node_id)
+            
+            for fanout_id, _ in self.nodes[node_id].fanouts:
+                if fanout_id not in visited:
+                    visited.add(fanout_id)
+                    queue.append((fanout_id, level + 1))
+        
+        return levels
+
+# todo: untested
+def extract_cone_for(aig: AIG, node_id: int) -> AIG:
+    """
+    Extract the cone of influence for a given node ID.
+    
+    The cone of influence includes all nodes that can affect the value of the specified node,
+    which are all nodes that have a path to the specified node through fanins.
+    
+    Args:
+        aig (AIG): The AIG instance from which to extract the cone.
+        node_id (int): The ID of the node for which to extract the cone of influence.
+    
+    Returns:
+        AIG: An AIG instance containing only the nodes in the cone of influence of the specified node.
+    """
+    cone = {}
+    visited = set()
+
+    def dfs(current_id):
+        if current_id in visited:
+            return
+        visited.add(current_id)
+        if current_id in aig.nodes:
+            cone[current_id] = aig.nodes[current_id]
+            for fanin_id in aig.nodes[current_id].fanins:
+                dfs(fanin_id)
+
+    dfs(node_id)
+
+    AIG_cone = AIG.__new__(AIG)  # Create an uninitialized instance
+    AIG_cone.nodes = cone
+    AIG_cone.input_ids = [nid for nid in aig.input_ids if nid in cone]
+    AIG_cone.outputs = [(node_id, False)]  # The specified node is the only output in the cone
+    return AIG_cone
+
 
 if __name__ == "__main__":
     import argparse
@@ -340,3 +447,4 @@ if __name__ == "__main__":
     # print all node values
     # print(f"All node values: {node_values}")
     print(f"Output values: {output_values}")
+

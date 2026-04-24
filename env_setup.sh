@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set +e
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -15,3 +15,4 @@ export PATH="$PROJECT_ROOT/.tools/aiger/:$PATH"
 export PATH="$PROJECT_ROOT/.tools/abc:$PATH"
 export PATH="$PROJECT_ROOT/.tools/oss-cad-suite/bin:$PATH"
 export PATH="$PROJECT_ROOT/.tools/cadiback:$PATH"
+export PATH="$PROJECT_ROOT/.tools/kissat/build:$PATH"

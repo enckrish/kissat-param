@@ -3,3 +3,4 @@
 .ephermal
 *abc.history
 */__pycache__/*
+notebooks/smac3_output/*
