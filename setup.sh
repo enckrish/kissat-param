@@ -191,4 +191,11 @@ if [ "$INSTALL_ENV_SETUP" = true ]; then
     sh env_setup.sh || echo -e "${RED}✗ env_setup.sh failed${NC}"
 fi
 
+echo "Creating datsets..."
+python data_generator.py
+
+echo "Creating training data for GNN..."
+python gnn_datagen.py
+
 echo -e "${GREEN}=== Setup Complete ===${NC}"
+echo "You are ready to run training_and_test.ipynb now!"
